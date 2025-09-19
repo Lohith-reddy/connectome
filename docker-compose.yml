@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  brain-connectivity:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./artifacts:/app/artifacts  
+      - ./logs:/app/logs
+      - ./.env:/app/.env
+    environment:
+      - DEBUG=false
+      - DATABASE_URL=sqlite:///./data/brain_connectivity.db
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+    restart: unless-stopped
+    command: python -m brain_connectivity.main
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  # Future: Add Celery worker when needed
+  # celery-worker:
+  #   build: .
+  #   command: celery -A brain_connectivity.tasks worker --loglevel=info
+  #   volumes:
+  #     - ./data:/app/data
+  #     - ./artifacts:/app/artifacts
+  #     - ./.env:/app/.env
+  #   depends_on:
+  #     - redis
+  #   restart: unless-stopped
+
+volumes:
+  redis_data:
